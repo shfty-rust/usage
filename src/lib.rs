@@ -210,7 +210,9 @@ where
 #[cfg(feature = "rayon")]
 mod rayon_impl {
     use super::*;
-    use rayon::iter::{ParallelIterator, FromParallelIterator};
+    use rayon::iter::{
+        FromParallelIterator, IntoParallelIterator, ParallelExtend, ParallelIterator,
+    };
 
     impl<U, T, V> FromParallelIterator<V> for Usage<U, T>
     where
@@ -219,6 +221,16 @@ mod rayon_impl {
     {
         fn from_par_iter<I: rayon::iter::IntoParallelIterator<Item = V>>(par_iter: I) -> Self {
             U::as_usage(par_iter.into_par_iter().collect())
+        }
+    }
+
+    impl<U, T, V> ParallelExtend<V> for Usage<U, T>
+    where
+        T: ParallelExtend<V>,
+        V: Send,
+    {
+        fn par_extend<I: IntoParallelIterator<Item = V>>(&mut self, par_iter: I) {
+            self.data.par_extend(par_iter)
         }
     }
 }
@@ -256,3 +268,4 @@ impl<U, T> Usage<U, T> {
         self.data
     }
 }
+
