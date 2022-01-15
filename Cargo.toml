@@ -9,3 +9,4 @@ keywords = ["newtype", "alternative", "classification"]
 categories = ["data-structures", "rust-patterns"]
 
 [dependencies]
+rayon = { version = "1.5.1", optional = true }

@@ -112,7 +112,10 @@ where
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Usage")
             .field("data", &self.data)
-            .field("_phantom", &format!("PhantomData<{}>", std::any::type_name::<U>()))
+            .field(
+                "_phantom",
+                &format!("PhantomData<{}>", std::any::type_name::<U>()),
+            )
             .finish()
     }
 }
@@ -129,11 +132,7 @@ where
     }
 }
 
-impl<U, T> Copy for Usage<U, T>
-where
-    T: Copy,
-{
-}
+impl<U, T> Copy for Usage<U, T> where T: Copy {}
 
 impl<U, T> Clone for Usage<U, T>
 where
@@ -199,9 +198,28 @@ impl<U, T> From<T> for Usage<U, T> {
     }
 }
 
-impl<U, T, V> FromIterator<V> for Usage<U, T> where T: FromIterator<V> {
+impl<U, T, V> FromIterator<V> for Usage<U, T>
+where
+    T: FromIterator<V>,
+{
     fn from_iter<I: IntoIterator<Item = V>>(iter: I) -> Self {
         U::as_usage(iter.into_iter().collect())
+    }
+}
+
+#[cfg(feature = "rayon")]
+mod rayon_impl {
+    use super::*;
+    use rayon::iter::{ParallelIterator, FromParallelIterator};
+
+    impl<U, T, V> FromParallelIterator<V> for Usage<U, T>
+    where
+        T: FromParallelIterator<V>,
+        V: Send,
+    {
+        fn from_par_iter<I: rayon::iter::IntoParallelIterator<Item = V>>(par_iter: I) -> Self {
+            U::as_usage(par_iter.into_par_iter().collect())
+        }
     }
 }
 
