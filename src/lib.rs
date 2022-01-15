@@ -199,6 +199,12 @@ impl<U, T> From<T> for Usage<U, T> {
     }
 }
 
+impl<U, T, V> FromIterator<V> for Usage<U, T> where T: FromIterator<V> {
+    fn from_iter<I: IntoIterator<Item = V>>(iter: I) -> Self {
+        U::as_usage(iter.into_iter().collect())
+    }
+}
+
 // Data access traits
 impl<U, T> Borrow<T> for Usage<U, T> {
     fn borrow(&self) -> &T {
