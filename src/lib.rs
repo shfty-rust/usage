@@ -1,5 +1,3 @@
-#![forbid(unsafe_code)]
-
 //! # A convenient alternative to the newtype pattern
 //!
 //! When building an API in Rust, a common dilemma is the choice between
@@ -74,6 +72,11 @@
 //!
 //! This can be worked around by implementing the foreign trait over the Usage's `T` parameter
 //! , or by using a newtype that implements said trait as the `T` instead.
+//!
+//! For cases where implementing over `Usage` is unavoidable,
+//! such as compatibility with certain `std` traits or those from commonly-used crates,
+//! feel free to send a pull request with the new functionality gated behind a feature flag
+//! as per the existing `rayon` and `bytemuck` implementations.
 //!
 
 mod as_usage;
@@ -235,6 +238,21 @@ mod rayon_impl {
     }
 }
 
+#[cfg(feature = "bytemuck")]
+mod bytemuck_impl {
+    use super::*;
+    use bytemuck::{Pod, Zeroable};
+
+    unsafe impl<U, T> Zeroable for Usage<U, T> where T: Zeroable {}
+
+    unsafe impl<U, T> Pod for Usage<U, T>
+    where
+        U: 'static,
+        T: Pod,
+    {
+    }
+}
+
 // Data access traits
 impl<U, T> Borrow<T> for Usage<U, T> {
     fn borrow(&self) -> &T {
@@ -268,4 +286,3 @@ impl<U, T> Usage<U, T> {
         self.data
     }
 }
-
